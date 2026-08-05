@@ -51,6 +51,7 @@
             overflow-y: auto;
             padding: 20px;
             padding-top: 30px;
+            padding-bottom: 100px;
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -314,33 +315,6 @@
             background: #d1d5db;
         }
 
-        .stats-bar {
-            padding: 15px 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            text-align: center;
-        }
-
-        .stat {
-            color: white;
-            font-size: 12px;
-        }
-
-        .stat-value {
-            font-size: 20px;
-            font-weight: 700;
-            color: white;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.7);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
         .context-menu {
             display: none;
             position: absolute;
@@ -390,17 +364,6 @@
 
         <div class="predictions-list" id="predictionsList">
             <div class="empty-state">No predictions yet. Create one to get started!</div>
-        </div>
-
-        <div class="stats-bar">
-            <div class="stat">
-                <div class="stat-value" id="totalStat">0</div>
-                <div class="stat-label">Total</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="percentStat">0%</div>
-                <div class="stat-label">Success</div>
-            </div>
         </div>
     </div>
 
@@ -456,7 +419,6 @@
         // Save to localStorage
         function savePredictions() {
             localStorage.setItem('predictions', JSON.stringify(predictions));
-            updateStats();
         }
 
         // Format date
@@ -468,16 +430,6 @@
                 hour: '2-digit',
                 minute: '2-digit'
             });
-        }
-
-        // Update stats
-        function updateStats() {
-            const total = predictions.length;
-            const correct = predictions.filter(p => p.status === '✅').length;
-            const percent = total === 0 ? 0 : Math.floor((correct / total) * 100);
-
-            document.getElementById('totalStat').textContent = total;
-            document.getElementById('percentStat').textContent = percent + '%';
         }
 
         // Escape HTML to prevent XSS
@@ -638,7 +590,6 @@
         // Initialize
         loadPredictions();
         renderPredictions();
-        updateStats();
     </script>
 </body>
 </html>
