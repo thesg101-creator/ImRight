@@ -378,10 +378,6 @@
                     <label for="titleInput">Prediction</label>
                     <input type="text" id="titleInput" placeholder="Enter your prediction" required>
                 </div>
-                <div class="form-group">
-                    <label for="dateInput">Judgment Date</label>
-                    <input type="datetime-local" id="dateInput" required>
-                </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closePredictionModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="saveBtn">Save Prediction</button>
@@ -571,10 +567,6 @@
         // Open new prediction modal
         document.getElementById('addBtn').addEventListener('click', () => {
             document.getElementById('newPredictionModal').classList.add('active');
-            const now = new Date();
-            const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-            const isoString = tomorrow.toISOString().slice(0, 16);
-            document.getElementById('dateInput').value = isoString;
             document.getElementById('titleInput').focus();
         });
 
@@ -587,14 +579,12 @@
         document.getElementById('predictionForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const title = document.getElementById('titleInput').value.trim();
-            const date = document.getElementById('dateInput').value;
 
-            if (title && date) {
+            if (title) {
                 predictions.push({
                     id: Date.now().toString(),
                     title: title,
                     created: new Date().toISOString(),
-                    judgmentDate: new Date(date).toISOString(),
                     status: '⏳'
                 });
 
@@ -603,7 +593,6 @@
                 triggerHaptic();
 
                 document.getElementById('titleInput').value = '';
-                document.getElementById('dateInput').value = '';
                 closePredictionModal();
             }
         });
