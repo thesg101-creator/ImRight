@@ -31,8 +31,8 @@
         }
 
         .header {
-            padding-top: 50px;
-            padding-bottom: 20px;
+            padding-top: 20px;
+            padding-bottom: 15px;
             text-align: center;
             z-index: 10;
         }
@@ -50,7 +50,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 20px;
-            padding-top: 30px;
+            padding-top: 10px;
             padding-bottom: 100px;
             display: flex;
             flex-direction: column;
@@ -317,13 +317,16 @@
 
         .context-menu {
             display: none;
-            position: absolute;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             background: rgba(0, 0, 0, 0.95);
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             z-index: 500;
-            min-width: 150px;
+            min-width: 180px;
         }
 
         .context-menu.active {
@@ -336,7 +339,7 @@
             border: none;
             background: none;
             color: white;
-            text-align: left;
+            text-align: center;
             cursor: pointer;
             font-size: 14px;
             transition: background 0.2s;
@@ -501,8 +504,6 @@
             currentPredictionId = id;
             const menu = document.getElementById('contextMenu');
             menu.classList.add('active');
-            menu.style.left = event.pageX + 'px';
-            menu.style.top = event.pageY + 'px';
         }
 
         // Hide context menu
