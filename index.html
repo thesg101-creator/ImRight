@@ -14,7 +14,8 @@
 
     /* Mobile-first styles */
     html,body{height:100%; margin:0; background:linear-gradient(180deg,var(--bg) 0%, #081426 100%); color:#e6eef8; -webkit-font-smoothing:antialiased;}
-    .wrap{max-width:720px;margin:12px auto;padding:16px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:var(--radius); box-shadow:0 6px 20px rgba(2,6,23,0.6);} 
+    /* Make wrap fill the viewport (subtracting vertical margins) so there's no white space at the bottom */
+    .wrap{min-height:calc(100vh - 24px); display:flex; flex-direction:column; max-width:720px;margin:12px auto;padding:16px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:var(--radius); box-shadow:0 6px 20px rgba(2,6,23,0.6);} 
 
     /* Header removed per request; keep compact spacing */
 
@@ -24,10 +25,15 @@
     button.ghost{background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--muted); padding:10px 12px; font-weight:600;}
 
     /* Layout stacks on mobile */
-    .stack{display:flex; flex-direction:column; gap:12px;}
+    .stack{display:flex; flex-direction:column; gap:12px; flex:1;}
     .card{background:var(--glass); padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.02);} 
 
-    ul.list{list-style:none;padding:0;margin:0; display:flex;flex-direction:column; gap:10px; max-height:60vh; overflow:auto;} 
+    ul.list{list-style:none;padding:0;margin:0; display:flex;flex-direction:column; gap:10px; overflow:auto;}
+    /* allow the list to grow to fill available space */
+    .left{display:flex; flex-direction:column; gap:12px; flex:1;}
+    .left > .card{flex:1; display:flex; flex-direction:column;}
+    .left .list{flex:1}
+
     li.item{display:flex; gap:10px; align-items:flex-start; padding:12px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); border:1px solid rgba(255,255,255,0.015); flex-direction:column;} 
     .meta{flex:1;} 
     .title{font-weight:700; font-size:16px;}
