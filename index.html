@@ -2,80 +2,108 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
   <title>ImRight — Predictions</title>
   <style>
     :root{
-      --bg:#0f1720; --card:#0b1220; --muted:#9aa4b2; --accent:#60a5fa; --success:#34d399; --danger:#fb7185;
+      --bg:#071022; --card:#0b1220; --muted:#9aa4b2; --accent:#60a5fa; --accent-contrast:#072033; --success:#34d399; --danger:#fb7185;
       --glass: rgba(255,255,255,0.03);
       font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --radius:12px;
     }
-    html,body{height:100%; margin:0; background:linear-gradient(180deg,#071022 0%, #081426 100%); color:#e6eef8;}
-    .wrap{max-width:900px;margin:32px auto;padding:24px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,0.6);} 
-    form.row{display:flex; gap:8px; align-items:flex-start; margin-bottom:16px;} 
-    input[type="text"], input[type="date"], input[type="datetime-local"], input[type="password"]{background:var(--card); border:1px solid rgba(255,255,255,0.03); color:inherit; padding:10px 12px; border-radius:8px; outline:none; flex:1;} 
-    button{background:var(--accent); color:#072033; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:600;} 
-    button.ghost{background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted);} 
-    .grid{display:grid; grid-template-columns:1fr 300px; gap:20px;} 
+
+    /* Mobile-first styles */
+    html,body{height:100%; margin:0; background:linear-gradient(180deg,var(--bg) 0%, #081426 100%); color:#e6eef8; -webkit-font-smoothing:antialiased;}
+    .wrap{max-width:720px;margin:12px auto;padding:16px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:var(--radius); box-shadow:0 6px 20px rgba(2,6,23,0.6);} 
+
+    /* Header removed per request; keep compact spacing */
+
+    form.row{display:flex; flex-direction:column; gap:10px; align-items:stretch; margin-bottom:12px;} 
+    input[type="text"], input[type="date"], input[type="datetime-local"], input[type="password"]{background:var(--card); border:1px solid rgba(255,255,255,0.03); color:inherit; padding:12px 14px; border-radius:10px; outline:none; font-size:16px;}
+    button{background:var(--accent); color:var(--accent-contrast); border:none; padding:12px 14px; border-radius:10px; cursor:pointer; font-weight:700; font-size:16px;}
+    button.ghost{background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--muted); padding:10px 12px; font-weight:600;}
+
+    /* Layout stacks on mobile */
+    .stack{display:flex; flex-direction:column; gap:12px;}
     .card{background:var(--glass); padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.02);} 
+
     ul.list{list-style:none;padding:0;margin:0; display:flex;flex-direction:column; gap:10px; max-height:60vh; overflow:auto;} 
-    li.item{display:flex; gap:10px; align-items:center; padding:10px; border-radius:8px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); border:1px solid rgba(255,255,255,0.015);} 
+    li.item{display:flex; gap:10px; align-items:flex-start; padding:12px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); border:1px solid rgba(255,255,255,0.015); flex-direction:column;} 
     .meta{flex:1;} 
-    .title{font-weight:700;} 
-    .small{font-size:13px;color:var(--muted);} 
-    .badges{display:flex; gap:6px; align-items:center;} 
-    .badge{padding:6px 8px; border-radius:999px; font-weight:600; font-size:13px;} 
+    .title{font-weight:700; font-size:16px;}
+    .small{font-size:13px;color:var(--muted); margin-top:6px;} 
+    .badges{display:flex; gap:8px; align-items:center; margin-top:8px;}
+    .badge{padding:6px 10px; border-radius:999px; font-weight:700; font-size:13px;} 
     .badge.pending{background:#f59e0b11; color:#f59e0b; border:1px solid rgba(245,158,11,0.12);} 
-    .badge.correct{background: #ecfdf5; color:var(--success);} 
-    .badge.incorrect{background: #fff1f2; color:var(--danger);} 
-    .controls{display:flex; gap:6px; align-items:center;} 
-    .muted{color:var(--muted); font-size:13px} 
-    .stat-percent{font-size:28px; font-weight:700; text-align:center; padding:18px 0}
+    .badge.correct{background: #042d1f22; color:var(--success); border:1px solid rgba(52,211,153,0.12);} 
+    .badge.incorrect{background: #3a0f121a; color:var(--danger); border:1px solid rgba(251,113,133,0.12);} 
+
+    .controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;}
+    .controls button{flex:1; min-width:80px}
+
+    .stat-percent{font-size:28px; font-weight:800; text-align:center; padding:18px 0}
+
+    /* GitHub box styles */
     .gh-box{display:flex;flex-direction:column; gap:8px; margin-top:8px}
-    .gh-controls{display:flex; gap:8px; align-items:center}
-    .note{font-size:12px;color:var(--muted)}
+    .gh-controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+    .note{font-size:13px;color:var(--muted)}
+
+    /* Larger touch targets on mobile */
+    input, button { -webkit-tap-highlight-color: rgba(0,0,0,0); }
+
+    /* Responsive adjustments for larger screens (kept minimal) */
+    @media(min-width:720px){
+      .wrap{padding:20px;}
+      form.row{flex-direction:row;}
+      .stack{flex-direction:row; gap:16px}
+      .left{flex:1}
+      .right{width:300px}
+      li.item{flex-direction:row; align-items:center}
+      .controls button{flex:none}
+    }
   </style>
 </head>
 <body>
   <div class="wrap" role="application">
 
-    <div class="grid">
-      <div>
+    <div class="stack">
+      <div class="left">
         <form id="addForm" class="row" onsubmit="return false;">
-          <input id="titleInput" type="text" placeholder="Prediction title" required />
-          <input id="dateInput" type="datetime-local" required />
-          <button id="addBtn" type="button">Add</button>
+          <input id="titleInput" type="text" placeholder="Prediction title" required aria-label="Prediction title" />
+          <input id="dateInput" type="datetime-local" required aria-label="Judgment date and time" />
+          <button id="addBtn" type="button">Add prediction</button>
         </form>
 
         <div class="card">
           <ul id="list" class="list" aria-live="polite"></ul>
           <div id="empty" class="small" hidden>No predictions yet — add one above.</div>
         </div>
-
       </div>
 
-      <aside class="card">
-        <h3 style="margin:0 0 8px 0;">Percent correct</h3>
-        <div id="percent" class="stat-percent">—</div>
+      <aside class="right card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong style="font-size:15px">Percent correct</strong>
+          <div class="note" style="font-size:12px">Correct / Total (floored)</div>
+        </div>
+        <div id="percent" class="stat-percent" aria-live="polite">—</div>
 
         <div class="gh-box">
-          <div class="note">Store predictions in this repository (predictions.json). Paste a Personal Access Token (PAT) with repo or public_repo scope. The token is saved only in your browser localStorage.</div>
-          <input id="ghTokenInput" type="password" placeholder="Paste GitHub PAT (saved locally)" />
+          <div class="note">Persist to repository: predictions.json. Paste a Personal Access Token (PAT) with repo/public_repo scope. Saved only in your browser.</div>
+          <input id="ghTokenInput" type="password" placeholder="Paste GitHub PAT (saved locally)" aria-label="GitHub token" />
           <div class="gh-controls">
-            <button id="ghConnectBtn" class="ghost">Connect GitHub</button>
+            <button id="ghConnectBtn" class="ghost">Connect</button>
             <button id="ghDisconnectBtn" class="ghost">Disconnect</button>
-            <button id="ghLoadBtn" class="ghost">Load from GitHub</button>
-            <button id="ghSaveBtn" class="ghost">Save to GitHub</button>
+            <button id="ghLoadBtn" class="ghost">Load</button>
+            <button id="ghSaveBtn" class="ghost">Save</button>
           </div>
         </div>
-
       </aside>
     </div>
 
   </div>
 
   <script>
-    // Simplified ImRight web app: localStorage + optional GitHub-backed save/load.
+    // Mobile-first ImRight web app: localStorage + optional GitHub-backed save/load.
     const STORAGE_KEY = 'imright.predictions.v1';
     const listEl = document.getElementById('list');
     const emptyEl = document.getElementById('empty');
@@ -91,7 +119,6 @@
     const ghSaveBtn = document.getElementById('ghSaveBtn');
     const percentEl = document.getElementById('percent');
 
-    // GitHub repo target (adjust if you fork/own the repo)
     const GITHUB_OWNER = 'thesg101-creator';
     const GITHUB_REPO = 'ImRight';
     const GITHUB_PATH = 'predictions.json';
@@ -101,302 +128,76 @@
 
     function load() {
       const raw = localStorage.getItem(STORAGE_KEY);
-      try {
-        predictions = raw ? JSON.parse(raw) : [];
-      } catch(e){
-        console.error('Failed to parse stored predictions', e);
-        predictions = [];
-      }
+      try { predictions = raw ? JSON.parse(raw) : []; } catch(e){ console.error('Failed to parse stored predictions', e); predictions = []; }
       render();
     }
 
-    function save() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(predictions));
-      render();
-    }
+    function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(predictions)); render(); }
 
-    function uid() {
-      if (crypto && crypto.randomUUID) return crypto.randomUUID();
-      return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-    }
+    function uid() { if (crypto && crypto.randomUUID) return crypto.randomUUID(); return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 
     function addPrediction(title, judgmentISO) {
-      const p = {
-        id: uid(),
-        title: title.trim(),
-        judgmentDate: judgmentISO,
-        status: 'pending', // pending | correct | incorrect
-        createdAt: new Date().toISOString() // hardcoded when created
-      };
-      predictions.push(p);
-      save();
+      const p = { id: uid(), title: title.trim(), judgmentDate: judgmentISO, status: 'pending', createdAt: new Date().toISOString() };
+      predictions.push(p); save();
     }
 
-    function updateStatus(id, status) {
-      const p = predictions.find(x=>x.id===id);
-      if (!p) return;
-      p.status = status;
-      save();
-    }
+    function updateStatus(id, status) { const p = predictions.find(x=>x.id===id); if (!p) return; p.status = status; save(); }
+    function updateJudgmentDate(id, iso) { const p = predictions.find(x=>x.id===id); if (!p) return; p.judgmentDate = iso; save(); }
+    function deletePrediction(id) { predictions = predictions.filter(x=>x.id!==id); save(); }
 
-    function updateJudgmentDate(id, iso) {
-      const p = predictions.find(x=>x.id===id);
-      if (!p) return;
-      p.judgmentDate = iso;
-      save();
-    }
-
-    function deletePrediction(id) {
-      predictions = predictions.filter(x=>x.id!==id);
-      save();
-    }
+    function toLocalInputString(date){ const pad = n=>n.toString().padStart(2,'0'); const year = date.getFullYear(); const month = pad(date.getMonth()+1); const day = pad(date.getDate()); const hrs = pad(date.getHours()); const mins = pad(date.getMinutes()); return `${year}-${month}-${day}T${hrs}:${mins}`; }
 
     function render() {
       listEl.innerHTML = '';
-      if (predictions.length === 0) {
-        emptyEl.hidden = false;
-        percentEl.textContent = '—';
-      } else {
-        emptyEl.hidden = true;
-        const sorted = predictions.slice().sort((a,b)=> new Date(a.judgmentDate) - new Date(b.judgmentDate));
-        for(const p of sorted){
-          const li = document.createElement('li');
-          li.className = 'item';
-          li.dataset.id = p.id;
+      if (predictions.length === 0) { emptyEl.hidden = false; percentEl.textContent = '—'; return; }
+      emptyEl.hidden = true;
+      const sorted = predictions.slice().sort((a,b)=> new Date(a.judgmentDate) - new Date(b.judgmentDate));
+      for(const p of sorted){
+        const li = document.createElement('li'); li.className='item'; li.dataset.id=p.id;
+        const meta = document.createElement('div'); meta.className='meta';
+        const title = document.createElement('div'); title.className='title'; title.textContent=p.title;
+        const small = document.createElement('div'); small.className='small'; small.textContent='Created: '+new Date(p.createdAt).toLocaleString();
+        const dateRow = document.createElement('div'); dateRow.style.marginTop='8px'; dateRow.style.display='flex'; dateRow.style.gap='8px'; dateRow.style.alignItems='center';
+        const jdInput = document.createElement('input'); jdInput.type='datetime-local'; const d=new Date(p.judgmentDate); jdInput.value = toLocalInputString(d);
+        jdInput.onchange = ()=>{ const val=jdInput.value; if(!val) return; updateJudgmentDate(p.id,new Date(val).toISOString()); };
+        dateRow.appendChild(jdInput);
+        meta.appendChild(title); meta.appendChild(small); meta.appendChild(dateRow);
 
-          const meta = document.createElement('div');
-          meta.className = 'meta';
+        const badges = document.createElement('div'); badges.className='badges'; const statusBadge=document.createElement('span'); statusBadge.className='badge '+(p.status==='pending'?'pending':(p.status==='correct'?'correct':'incorrect')); statusBadge.textContent=p.status.toUpperCase(); badges.appendChild(statusBadge);
+        const controls = document.createElement('div'); controls.className='controls';
+        const correctBtn=document.createElement('button'); correctBtn.className='ghost'; correctBtn.textContent='Correct'; correctBtn.onclick=()=>updateStatus(p.id,'correct');
+        const incorrectBtn=document.createElement('button'); incorrectBtn.className='ghost'; incorrectBtn.textContent='Incorrect'; incorrectBtn.onclick=()=>updateStatus(p.id,'incorrect');
+        const pendingBtn=document.createElement('button'); pendingBtn.className='ghost'; pendingBtn.textContent='Pending'; pendingBtn.onclick=()=>updateStatus(p.id,'pending');
+        const delBtn=document.createElement('button'); delBtn.className='ghost'; delBtn.textContent='Delete'; delBtn.onclick=()=>{ if(confirm('Delete this prediction?')) deletePrediction(p.id); };
+        controls.appendChild(correctBtn); controls.appendChild(incorrectBtn); controls.appendChild(pendingBtn); controls.appendChild(delBtn);
 
-          const title = document.createElement('div');
-          title.className = 'title';
-          title.textContent = p.title;
-
-          const small = document.createElement('div');
-          small.className = 'small';
-          small.textContent = 'Created: ' + new Date(p.createdAt).toLocaleString();
-
-          const dateRow = document.createElement('div');
-          dateRow.style.marginTop = '8px';
-          dateRow.style.display = 'flex';
-          dateRow.style.gap = '8px';
-          dateRow.style.alignItems = 'center';
-
-          const jdInput = document.createElement('input');
-          jdInput.type = 'datetime-local';
-          // set value as local datetime string
-          const d = new Date(p.judgmentDate);
-          function toLocalInputString(date){
-            const pad = n=>n.toString().padStart(2,'0');
-            const year = date.getFullYear();
-            const month = pad(date.getMonth()+1);
-            const day = pad(date.getDate());
-            const hrs = pad(date.getHours());
-            const mins = pad(date.getMinutes());
-            return `${year}-${month}-${day}T${hrs}:${mins}`;
-          }
-          jdInput.value = toLocalInputString(d);
-          jdInput.onchange = ()=> {
-            const val = jdInput.value;
-            if (!val) return;
-            const iso = new Date(val).toISOString();
-            updateJudgmentDate(p.id, iso);
-          };
-
-          dateRow.appendChild(jdInput);
-
-          meta.appendChild(title);
-          meta.appendChild(small);
-          meta.appendChild(dateRow);
-
-          const right = document.createElement('div');
-          right.style.display = 'flex';
-          right.style.flexDirection = 'column';
-          right.style.alignItems = 'flex-end';
-          right.style.gap = '8px';
-
-          const badges = document.createElement('div');
-          badges.className = 'badges';
-          const statusBadge = document.createElement('span');
-          statusBadge.className = 'badge ' + (p.status === 'pending' ? 'pending' : (p.status === 'correct' ? 'correct' : 'incorrect'));
-          statusBadge.textContent = p.status.toUpperCase();
-          badges.appendChild(statusBadge);
-
-          const controls = document.createElement('div');
-          controls.className = 'controls';
-
-          const correctBtn = document.createElement('button');
-          correctBtn.className = 'ghost';
-          correctBtn.textContent = 'Correct';
-          correctBtn.onclick = ()=> updateStatus(p.id, 'correct');
-
-          const incorrectBtn = document.createElement('button');
-          incorrectBtn.className = 'ghost';
-          incorrectBtn.textContent = 'Incorrect';
-          incorrectBtn.onclick = ()=> updateStatus(p.id, 'incorrect');
-
-          const pendingBtn = document.createElement('button');
-          pendingBtn.className = 'ghost';
-          pendingBtn.textContent = 'Pending';
-          pendingBtn.onclick = ()=> updateStatus(p.id, 'pending');
-
-          const delBtn = document.createElement('button');
-          delBtn.className = 'ghost';
-          delBtn.textContent = 'Delete';
-          delBtn.onclick = ()=> { if(confirm('Delete this prediction?')) deletePrediction(p.id); };
-
-          controls.appendChild(correctBtn);
-          controls.appendChild(incorrectBtn);
-          controls.appendChild(pendingBtn);
-          controls.appendChild(delBtn);
-
-          right.appendChild(badges);
-          right.appendChild(controls);
-
-          li.appendChild(meta);
-          li.appendChild(right);
-          listEl.appendChild(li);
-        }
-
-        // update percent correct as floor(correct/total * 100)
-        const total = predictions.length;
-        const correct = predictions.filter(p=>p.status==='correct').length;
-        const pct = total === 0 ? '—' : Math.floor((correct / total) * 100) + '%';
-        percentEl.textContent = pct;
+        li.appendChild(meta); li.appendChild(badges); li.appendChild(controls); listEl.appendChild(li);
       }
+      const total = predictions.length; const correct = predictions.filter(p=>p.status==='correct').length; const pct = total===0? '—' : Math.floor((correct/total)*100)+'%'; percentEl.textContent=pct;
     }
 
     // Add button
-    addBtn.onclick = () => {
-      const title = titleInput.value.trim();
-      const dateVal = dateInput.value;
-      if (!title || !dateVal) {
-        alert('Please provide title and judgment date/time.');
-        return;
-      }
-      const iso = new Date(dateVal).toISOString();
-      addPrediction(title, iso);
-      titleInput.value = '';
-      dateInput.value = '';
-    };
-
-    // Accessibility: add keyboard submit
-    document.getElementById('addForm').addEventListener('submit', (e)=> {
-      e.preventDefault();
-      addBtn.click();
-    });
-
-    // For demo: prefill date input with tomorrow
-    (function prefill() {
-      const d = new Date(Date.now() + 1000 * 60 * 60 * 24);
-      d.setSeconds(0,0);
-      const pad = n=> n.toString().padStart(2,'0');
-      const s = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-      dateInput.value = s;
-    })();
+    addBtn.onclick = ()=>{ const title=titleInput.value.trim(); const dateVal=dateInput.value; if(!title||!dateVal){ alert('Please provide title and judgment date/time.'); return;} addPrediction(title,new Date(dateVal).toISOString()); titleInput.value=''; dateInput.value=''; };
+    document.getElementById('addForm').addEventListener('submit',(e)=>{ e.preventDefault(); addBtn.click(); });
+    (function prefill(){ const d=new Date(Date.now()+1000*60*60*24); d.setSeconds(0,0); const pad=n=>n.toString().padStart(2,'0'); dateInput.value = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes()); })();
 
     // ------------------------
-    // GitHub-backed storage (unchanged)
+    // GitHub-backed storage
     // ------------------------
+    function setLocalToken(t){ if(t) localStorage.setItem(TOKEN_KEY,t); else localStorage.removeItem(TOKEN_KEY); ghTokenInput.value=t||''; }
+    function getLocalToken(){ return localStorage.getItem(TOKEN_KEY) || ''; }
+    function decodeBase64Content(b64){ try{ const cleaned=b64.replace(/\n/g,''); const str=atob(cleaned); try{ return JSON.parse(decodeURIComponent(escape(str))); }catch(e){ return JSON.parse(str);} }catch(e){ throw new Error('Failed to decode base64 content: '+e.message);} }
+    async function githubGetFile(owner,repo,path,token){ const url=`https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`; const headers={'Accept':'application/vnd.github.v3+json'}; if(token) headers['Authorization']='token '+token; const res=await fetch(url,{headers}); if(res.status===404) return null; if(!res.ok){ const text=await res.text(); throw new Error('GitHub GET failed: '+res.status+' '+text);} const js=await res.json(); const content=decodeBase64Content(js.content||''); return {sha:js.sha,content}; }
+    async function githubPutFile(owner,repo,path,contentObj,message,token,sha){ if(!token) throw new Error('No GitHub token provided'); const url=`https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`; const jsonStr=JSON.stringify(contentObj,null,2); const base64=btoa(unescape(encodeURIComponent(jsonStr))); const body={message:message||'Update predictions via ImRight',content:base64}; if(sha) body.sha=sha; const res=await fetch(url,{ method:'PUT', headers:{ 'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json' }, body:JSON.stringify(body)}); if(!res.ok){ const text=await res.text(); throw new Error('GitHub PUT failed: '+res.status+' '+text);} return await res.json(); }
 
-    function setLocalToken(t) {
-      if (t) localStorage.setItem(TOKEN_KEY, t);
-      else localStorage.removeItem(TOKEN_KEY);
-      ghTokenInput.value = t || '';
-    }
-    function getLocalToken() {
-      return localStorage.getItem(TOKEN_KEY) || '';
-    }
-
-    function decodeBase64Content(b64) {
-      try {
-        const cleaned = b64.replace(/\n/g, '');
-        const str = atob(cleaned);
-        try { return JSON.parse(decodeURIComponent(escape(str))); }
-        catch(e) { return JSON.parse(str); }
-      } catch (e) { throw new Error('Failed to decode base64 content: ' + e.message); }
-    }
-
-    async function githubGetFile(owner, repo, path, token) {
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
-      const headers = { 'Accept': 'application/vnd.github.v3+json' };
-      if (token) headers['Authorization'] = 'token ' + token;
-      const res = await fetch(url, { headers });
-      if (res.status === 404) return null;
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error('GitHub GET failed: ' + res.status + ' ' + text);
-      }
-      const js = await res.json();
-      const content = decodeBase64Content(js.content || '');
-      return { sha: js.sha, content };
-    }
-
-    async function githubPutFile(owner, repo, path, contentObj, message, token, sha) {
-      if (!token) throw new Error('No GitHub token provided');
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
-      const jsonStr = JSON.stringify(contentObj, null, 2);
-      const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
-      const body = { message: message || 'Update predictions via ImRight', content: base64 };
-      if (sha) body.sha = sha;
-      const res = await fetch(url, {
-        method: 'PUT',
-        headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error('GitHub PUT failed: ' + res.status + ' ' + text);
-      }
-      return await res.json();
-    }
-
-    ghConnectBtn.onclick = () => {
-      const t = ghTokenInput.value.trim();
-      if (!t) return alert('Paste your GitHub PAT (token) into the field.');
-      setLocalToken(t);
-      alert('Token saved in your browser (localStorage). You can revoke it any time in your GitHub settings.');
-    };
-
-    ghDisconnectBtn.onclick = () => {
-      if (!confirm('Remove saved GitHub token from this browser?')) return;
-      setLocalToken(null);
-      alert('Disconnected. Token removed from localStorage.');
-    };
-
-    ghLoadBtn.onclick = async () => {
-      const token = getLocalToken();
-      try {
-        const f = await githubGetFile(GITHUB_OWNER, GITHUB_REPO, GITHUB_PATH, token);
-        if (!f) return alert('No ' + GITHUB_PATH + ' found in repo. You can Save to GitHub to create it.');
-        if (!Array.isArray(f.content)) throw new Error('Invalid content in ' + GITHUB_PATH);
-        predictions = f.content;
-        save();
-        alert('Loaded ' + predictions.length + ' predictions from GitHub (commit SHA: ' + f.sha + ').');
-      } catch (err) {
-        console.error(err);
-        alert('Load failed: ' + err.message + '\nMake sure token has repo/public_repo scope if repo is private.');
-      }
-    };
-
-    ghSaveBtn.onclick = async () => {
-      const token = getLocalToken();
-      if (!token) return alert('Paste your GitHub PAT and click Connect first.');
-      try {
-        const existing = await githubGetFile(GITHUB_OWNER, GITHUB_REPO, GITHUB_PATH, token).catch(e => null);
-        const sha = existing ? existing.sha : undefined;
-        const msg = existing ? 'Update predictions via ImRight web' : 'Create predictions.json via ImRight web';
-        await githubPutFile(GITHUB_OWNER, GITHUB_REPO, GITHUB_PATH, predictions, msg, token, sha);
-        alert('Saved ' + predictions.length + ' predictions to GitHub at ' + GITHUB_PATH);
-      } catch (err) {
-        console.error(err);
-        alert('Save failed: ' + err.message + '\nMake sure the token has repo/public_repo scope and the repo owner/repo names are correct.');
-      }
-    };
+    ghConnectBtn.onclick = ()=>{ const t=ghTokenInput.value.trim(); if(!t) return alert('Paste your GitHub PAT (token) into the field.'); setLocalToken(t); alert('Token saved in your browser (localStorage). You can revoke it any time in your GitHub settings.'); };
+    ghDisconnectBtn.onclick = ()=>{ if(!confirm('Remove saved GitHub token from this browser?')) return; setLocalToken(null); alert('Disconnected. Token removed from localStorage.'); };
+    ghLoadBtn.onclick = async ()=>{ const token=getLocalToken(); try{ const f=await githubGetFile(GITHUB_OWNER,GITHUB_REPO,GITHUB_PATH,token); if(!f) return alert('No '+GITHUB_PATH+' found in repo. You can Save to GitHub to create it.'); if(!Array.isArray(f.content)) throw new Error('Invalid content in '+GITHUB_PATH); predictions=f.content; save(); alert('Loaded '+predictions.length+' predictions from GitHub (commit SHA: '+f.sha+').'); }catch(err){ console.error(err); alert('Load failed: '+err.message+'\nMake sure token has repo/public_repo scope if repo is private.'); } };
+    ghSaveBtn.onclick = async ()=>{ const token=getLocalToken(); if(!token) return alert('Paste your GitHub PAT and click Connect first.'); try{ const existing = await githubGetFile(GITHUB_OWNER,GITHUB_REPO,GITHUB_PATH,token).catch(e=>null); const sha = existing ? existing.sha : undefined; const msg = existing ? 'Update predictions via ImRight web' : 'Create predictions.json via ImRight web'; await githubPutFile(GITHUB_OWNER,GITHUB_REPO,GITHUB_PATH,predictions,msg,token,sha); alert('Saved '+predictions.length+' predictions to GitHub at '+GITHUB_PATH); }catch(err){ console.error(err); alert('Save failed: '+err.message+'\nMake sure the token has repo/public_repo scope and the repo owner/repo names are correct.'); } };
 
     // initialize
     ghTokenInput.value = localStorage.getItem(TOKEN_KEY) || '';
     load();
-
   </script>
 </body>
 </html>
