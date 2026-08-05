@@ -186,7 +186,8 @@
         .fab {
             position: fixed;
             bottom: 30px;
-            right: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             width: 60px;
             height: 60px;
             border-radius: 50%;
@@ -205,11 +206,11 @@
 
         .fab:hover {
             background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.05);
+            transform: translateX(-50%) scale(1.05);
         }
 
         .fab:active {
-            transform: scale(0.95);
+            transform: translateX(-50%) scale(0.95);
         }
 
         .modal {
@@ -317,7 +318,7 @@
             padding: 15px 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
             text-align: center;
         }
@@ -395,10 +396,6 @@
             <div class="stat">
                 <div class="stat-value" id="totalStat">0</div>
                 <div class="stat-label">Total</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="correctStat">0</div>
-                <div class="stat-label">Correct</div>
             </div>
             <div class="stat">
                 <div class="stat-value" id="percentStat">0%</div>
@@ -480,7 +477,6 @@
             const percent = total === 0 ? 0 : Math.floor((correct / total) * 100);
 
             document.getElementById('totalStat').textContent = total;
-            document.getElementById('correctStat').textContent = correct;
             document.getElementById('percentStat').textContent = percent + '%';
         }
 
