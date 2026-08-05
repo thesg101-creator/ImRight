@@ -14,8 +14,21 @@
 
     /* Mobile-first styles */
     html,body{height:100%; margin:0; background:linear-gradient(180deg,var(--bg) 0%, #081426 100%); color:#e6eef8; -webkit-font-smoothing:antialiased;}
-    /* Make wrap fill the viewport (subtracting vertical margins) so there's no white space at the bottom */
-    .wrap{min-height:calc(100vh - 24px); display:flex; flex-direction:column; max-width:720px;margin:12px auto;padding:16px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:var(--radius); box-shadow:0 6px 20px rgba(2,6,23,0.6);} 
+
+    /* Blue top layer to cover status/address bar white gaps on mobile */
+    .top-layer{
+      position:fixed;
+      left:0;
+      right:0;
+      top:0;
+      height:calc(env(safe-area-inset-top, 0px) + 12px);
+      background:var(--bg);
+      pointer-events:none;
+      z-index:1;
+    }
+
+    /* Make wrap sit above the top-layer and fill the viewport (subtracting vertical margins) so there's no white space at the bottom */
+    .wrap{min-height:calc(100vh - 24px); display:flex; flex-direction:column; max-width:720px;margin:12px auto;padding:16px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:var(--radius); box-shadow:0 6px 20px rgba(2,6,23,0.6); position:relative; z-index:2;} 
 
     /* Header removed per request; keep compact spacing */
 
@@ -70,6 +83,7 @@
   </style>
 </head>
 <body>
+  <div class="top-layer" aria-hidden="true"></div>
   <div class="wrap" role="application">
 
     <div class="stack">
