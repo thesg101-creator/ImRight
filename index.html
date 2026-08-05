@@ -12,8 +12,6 @@
     }
     html,body{height:100%; margin:0; background:linear-gradient(180deg,#071022 0%, #081426 100%); color:#e6eef8;}
     .wrap{max-width:900px;margin:32px auto;padding:24px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; box-shadow:0 6px 30px rgba(2,6,23,0.6);} 
-    h1{margin:0 0 8px 0;font-size:20px;}
-    p.lead{margin:0 0 18px 0;color:var(--muted);} 
     form.row{display:flex; gap:8px; align-items:flex-start; margin-bottom:16px;} 
     input[type="text"], input[type="date"], input[type="datetime-local"], input[type="password"]{background:var(--card); border:1px solid rgba(255,255,255,0.03); color:inherit; padding:10px 12px; border-radius:8px; outline:none; flex:1;} 
     button{background:var(--accent); color:#072033; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:600;} 
@@ -32,63 +30,36 @@
     .badge.incorrect{background: #fff1f2; color:var(--danger);} 
     .controls{display:flex; gap:6px; align-items:center;} 
     .muted{color:var(--muted); font-size:13px} 
-    .stats{display:flex; gap:8px; flex-direction:column;} 
-    .stat-row{display:flex; gap:8px; justify-content:space-between; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.01);} 
-    footer{margin-top:16px;font-size:13px;color:var(--muted);} 
-    .empty{color:var(--muted); text-align:center; padding:28px 0;} 
+    .stat-percent{font-size:28px; font-weight:700; text-align:center; padding:18px 0}
     .gh-box{display:flex;flex-direction:column; gap:8px; margin-top:8px}
     .gh-controls{display:flex; gap:8px; align-items:center}
     .note{font-size:12px;color:var(--muted)}
   </style>
 </head>
 <body>
-  <div class="wrap" role="application" aria-labelledby="title">
-    <h1 id="title">ImRight — Predictions (Web)</h1>
-    <p class="lead">Create predictions, set a judgment date, mark status, get notified, and keep everything saved locally in your browser.</p>
+  <div class="wrap" role="application">
 
     <div class="grid">
       <div>
         <form id="addForm" class="row" onsubmit="return false;">
-          <input id="titleInput" type="text" placeholder="Prediction title (e.g. 'Bitcoin > $100k by 2027')" required />
+          <input id="titleInput" type="text" placeholder="Prediction title" required />
           <input id="dateInput" type="datetime-local" required />
           <button id="addBtn" type="button">Add</button>
         </form>
 
         <div class="card">
-          <h3 style="margin:0 0 8px 0;">Predictions</h3>
           <ul id="list" class="list" aria-live="polite"></ul>
-          <div id="empty" class="empty" hidden>No predictions yet — add one above.</div>
+          <div id="empty" class="small" hidden>No predictions yet — add one above.</div>
         </div>
 
-        <div style="display:flex; gap:8px; margin-top:10px;">
-          <button id="exportBtn" class="ghost">Export JSON</button>
-          <button id="importBtn" class="ghost">Import JSON</button>
-          <input id="importFile" type="file" accept="application/json" style="display:none" />
-        </div>
       </div>
 
       <aside class="card">
-        <h3 style="margin:0 0 8px 0;">Stats</h3>
-        <div id="stats" class="stats">
-          <div class="stat-row"><div>Total</div><div id="statTotal">0</div></div>
-          <div class="stat-row"><div>Correct</div><div id="statCorrect">0</div></div>
-          <div class="stat-row"><div>Incorrect</div><div id="statIncorrect">0</div></div>
-          <div class="stat-row"><div>Pending</div><div id="statPending">0</div></div>
-          <div class="stat-row"><div>Success rate</div><div id="statRate">—</div></div>
-        </div>
-
-        <div style="margin-top:12px">
-          <h4 style="margin:8px 0 6px 0;">Notifications</h4>
-          <p class="muted">Click to allow browser notifications. Note: scheduled alerts run while this page is open; background notifications require a server + push or advanced service-worker logic.</p>
-          <div style="display:flex; gap:8px;">
-            <button id="notifyPermBtn" class="ghost">Request Permission</button>
-            <button id="clearAll" class="ghost">Clear All</button>
-          </div>
-        </div>
+        <h3 style="margin:0 0 8px 0;">Percent correct</h3>
+        <div id="percent" class="stat-percent">—</div>
 
         <div class="gh-box">
-          <h4 style="margin:6px 0 0 0;">GitHub-backed storage</h4>
-          <div class="note">Store predictions in this repository (predictions.json). You must paste a Personal Access Token (PAT) with repo or public_repo scope. The token is saved only in your browser localStorage.</div>
+          <div class="note">Store predictions in this repository (predictions.json). Paste a Personal Access Token (PAT) with repo or public_repo scope. The token is saved only in your browser localStorage.</div>
           <input id="ghTokenInput" type="password" placeholder="Paste GitHub PAT (saved locally)" />
           <div class="gh-controls">
             <button id="ghConnectBtn" class="ghost">Connect GitHub</button>
@@ -101,24 +72,16 @@
       </aside>
     </div>
 
-    <footer>
-      This is a lightweight web version of ImRight. Data is stored in your browser localStorage by default. Use GitHub-backed storage to persist predictions to the repository where this site is hosted.
-    </footer>
   </div>
 
   <script>
-    // Simple web ImRight implementation using localStorage and Notification API.
+    // Simplified ImRight web app: localStorage + optional GitHub-backed save/load.
     const STORAGE_KEY = 'imright.predictions.v1';
     const listEl = document.getElementById('list');
     const emptyEl = document.getElementById('empty');
     const titleInput = document.getElementById('titleInput');
     const dateInput = document.getElementById('dateInput');
     const addBtn = document.getElementById('addBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const importBtn = document.getElementById('importBtn');
-    const importFile = document.getElementById('importFile');
-    const notifyPermBtn = document.getElementById('notifyPermBtn');
-    const clearAllBtn = document.getElementById('clearAll');
 
     // GitHub UI
     const ghTokenInput = document.getElementById('ghTokenInput');
@@ -126,12 +89,7 @@
     const ghDisconnectBtn = document.getElementById('ghDisconnectBtn');
     const ghLoadBtn = document.getElementById('ghLoadBtn');
     const ghSaveBtn = document.getElementById('ghSaveBtn');
-
-    const statTotal = document.getElementById('statTotal');
-    const statCorrect = document.getElementById('statCorrect');
-    const statIncorrect = document.getElementById('statIncorrect');
-    const statPending = document.getElementById('statPending');
-    const statRate = document.getElementById('statRate');
+    const percentEl = document.getElementById('percent');
 
     // GitHub repo target (adjust if you fork/own the repo)
     const GITHUB_OWNER = 'thesg101-creator';
@@ -140,7 +98,6 @@
     const TOKEN_KEY = 'imright.github.token';
 
     let predictions = [];
-    const timers = new Map(); // id -> timeoutId
 
     function load() {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -151,7 +108,6 @@
         predictions = [];
       }
       render();
-      rescheduleAll();
     }
 
     function save() {
@@ -170,11 +126,10 @@
         title: title.trim(),
         judgmentDate: judgmentISO,
         status: 'pending', // pending | correct | incorrect
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString() // hardcoded when created
       };
       predictions.push(p);
       save();
-      scheduleNotificationFor(p);
     }
 
     function updateStatus(id, status) {
@@ -182,38 +137,76 @@
       if (!p) return;
       p.status = status;
       save();
-      // if it's judged, cancel future notification
-      if (status !== 'pending') cancelScheduled(id);
+    }
+
+    function updateJudgmentDate(id, iso) {
+      const p = predictions.find(x=>x.id===id);
+      if (!p) return;
+      p.judgmentDate = iso;
+      save();
     }
 
     function deletePrediction(id) {
       predictions = predictions.filter(x=>x.id!==id);
       save();
-      cancelScheduled(id);
     }
 
     function render() {
       listEl.innerHTML = '';
       if (predictions.length === 0) {
         emptyEl.hidden = false;
+        percentEl.textContent = '—';
       } else {
         emptyEl.hidden = true;
-        // sort by judgment date ascending
         const sorted = predictions.slice().sort((a,b)=> new Date(a.judgmentDate) - new Date(b.judgmentDate));
         for(const p of sorted){
           const li = document.createElement('li');
           li.className = 'item';
           li.dataset.id = p.id;
+
           const meta = document.createElement('div');
           meta.className = 'meta';
+
           const title = document.createElement('div');
           title.className = 'title';
           title.textContent = p.title;
+
           const small = document.createElement('div');
           small.className = 'small';
-          small.textContent = (new Date(p.judgmentDate)).toLocaleString() + ' • Created ' + new Date(p.createdAt).toLocaleDateString();
+          small.textContent = 'Created: ' + new Date(p.createdAt).toLocaleString();
+
+          const dateRow = document.createElement('div');
+          dateRow.style.marginTop = '8px';
+          dateRow.style.display = 'flex';
+          dateRow.style.gap = '8px';
+          dateRow.style.alignItems = 'center';
+
+          const jdInput = document.createElement('input');
+          jdInput.type = 'datetime-local';
+          // set value as local datetime string
+          const d = new Date(p.judgmentDate);
+          function toLocalInputString(date){
+            const pad = n=>n.toString().padStart(2,'0');
+            const year = date.getFullYear();
+            const month = pad(date.getMonth()+1);
+            const day = pad(date.getDate());
+            const hrs = pad(date.getHours());
+            const mins = pad(date.getMinutes());
+            return `${year}-${month}-${day}T${hrs}:${mins}`;
+          }
+          jdInput.value = toLocalInputString(d);
+          jdInput.onchange = ()=> {
+            const val = jdInput.value;
+            if (!val) return;
+            const iso = new Date(val).toISOString();
+            updateJudgmentDate(p.id, iso);
+          };
+
+          dateRow.appendChild(jdInput);
+
           meta.appendChild(title);
           meta.appendChild(small);
+          meta.appendChild(dateRow);
 
           const right = document.createElement('div');
           right.style.display = 'flex';
@@ -263,136 +256,14 @@
           li.appendChild(right);
           listEl.appendChild(li);
         }
-      }
-      refreshStats();
-    }
 
-    function refreshStats() {
-      const total = predictions.length;
-      const correct = predictions.filter(p=>p.status==='correct').length;
-      const incorrect = predictions.filter(p=>p.status==='incorrect').length;
-      const pending = predictions.filter(p=>p.status==='pending').length;
-      statTotal.textContent = total;
-      statCorrect.textContent = correct;
-      statIncorrect.textContent = incorrect;
-      statPending.textContent = pending;
-      if (correct + incorrect === 0) {
-        statRate.textContent = '—';
-      } else {
-        const rate = Math.round((correct / (correct + incorrect)) * 100);
-        statRate.textContent = rate + '%';
+        // update percent correct as floor(correct/total * 100)
+        const total = predictions.length;
+        const correct = predictions.filter(p=>p.status==='correct').length;
+        const pct = total === 0 ? '—' : Math.floor((correct / total) * 100) + '%';
+        percentEl.textContent = pct;
       }
     }
-
-    // Notifications
-    function requestNotificationPermission() {
-      if (!('Notification' in window)) {
-        alert('Notifications are not supported in this browser.');
-        return;
-      }
-      Notification.requestPermission().then(p => {
-        alert('Notification permission: ' + p);
-      });
-    }
-
-    function showNotificationFor(p) {
-      if (!('Notification' in window)) return;
-      if (Notification.permission !== 'granted') return;
-      try {
-        const title = 'Time to judge: ' + p.title;
-        const opts = {
-          body: `Judgment date reached: ${new Date(p.judgmentDate).toLocaleString()}. Mark Correct / Incorrect in ImRight.`,
-          tag: 'imright-' + p.id,
-          timestamp: new Date(p.judgmentDate).getTime()
-        };
-        new Notification(title, opts);
-      } catch(e) {
-        console.error('Failed to show notification', e);
-      }
-    }
-
-    function scheduleNotificationFor(p) {
-      cancelScheduled(p.id);
-      if (!p.judgmentDate) return;
-      if (p.status !== 'pending') return; // don't notify judged items
-      const judgmentTime = new Date(p.judgmentDate).getTime();
-      const now = Date.now();
-      const delay = judgmentTime - now;
-      if (delay <= 0) return;
-      // Limit: cap to 14 days to avoid browser timer clamping on long timers
-      const MAX_DELAY = 1000 * 60 * 60 * 24 * 14; // 14 days
-      const runDelay = Math.min(delay, MAX_DELAY);
-      const id = setTimeout(() => {
-        showNotificationFor(p);
-        timers.delete(p.id);
-      }, runDelay);
-      timers.set(p.id, id);
-    }
-
-    function cancelScheduled(id) {
-      const t = timers.get(id);
-      if (t) {
-        clearTimeout(t);
-        timers.delete(id);
-      }
-    }
-
-    function rescheduleAll() {
-      // Cancel all existing and schedule again.
-      for(const k of Array.from(timers.keys())) {
-        cancelScheduled(k);
-      }
-      for(const p of predictions) {
-        scheduleNotificationFor(p);
-      }
-    }
-
-    // Export / Import
-    exportBtn.onclick = () => {
-      const data = JSON.stringify(predictions, null, 2);
-      const blob = new Blob([data], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'imright-predictions.json';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    };
-
-    importBtn.onclick = () => importFile.click();
-    importFile.onchange = async (e) => {
-      const f = e.target.files[0];
-      if (!f) return;
-      const txt = await f.text();
-      try {
-        const imported = JSON.parse(txt);
-        if (!Array.isArray(imported)) throw new Error('Expected array');
-        // Basic merge: keep existing, add non-duplicated by id
-        const existingIds = new Set(predictions.map(x=>x.id));
-        for(const it of imported) {
-          if (!it.id) it.id = uid();
-          if (!existingIds.has(it.id)) predictions.push(it);
-        }
-        save();
-        alert('Imported ' + imported.length + ' items (merged).');
-      } catch (err) {
-        alert('Failed to import: ' + err.message);
-      } finally {
-        importFile.value = '';
-      }
-    };
-
-    // Clear all
-    clearAllBtn.onclick = ()=> {
-      if (!confirm('Clear all predictions? This cannot be undone.')) return;
-      predictions = [];
-      save();
-      // clear timers
-      for(const t of timers.values()) clearTimeout(t);
-      timers.clear();
-    };
 
     // Add button
     addBtn.onclick = () => {
@@ -408,19 +279,6 @@
       dateInput.value = '';
     };
 
-    // Request permission btn
-    notifyPermBtn.onclick = () => requestNotificationPermission();
-
-    // On load
-    // populate GH token input from localStorage
-    ghTokenInput.value = localStorage.getItem(TOKEN_KEY) || '';
-    load();
-
-    // Re-schedule when visibility changes (in case user reopened the page)
-    document.addEventListener('visibilitychange', ()=> {
-      if (!document.hidden) rescheduleAll();
-    });
-
     // Accessibility: add keyboard submit
     document.getElementById('addForm').addEventListener('submit', (e)=> {
       e.preventDefault();
@@ -430,29 +288,14 @@
     // For demo: prefill date input with tomorrow
     (function prefill() {
       const d = new Date(Date.now() + 1000 * 60 * 60 * 24);
-      // Round to nearest minute and format as yyyy-MM-ddThh:mm
       d.setSeconds(0,0);
       const pad = n=> n.toString().padStart(2,'0');
       const s = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
       dateInput.value = s;
     })();
 
-    // Show notification when a judgment becomes due while the app is running:
-    // Also check every minute for any overdue pending predictions (in case the page was in background)
-    setInterval(()=> {
-      const now = Date.now();
-      for(const p of predictions) {
-        if (p.status === 'pending' && new Date(p.judgmentDate).getTime() <= now) {
-          // If not already fired via timer, show it and remove timer
-          const tag = 'imright-' + p.id;
-          showNotificationFor(p);
-          cancelScheduled(p.id);
-        }
-      }
-    }, 60_000);
-
     // ------------------------
-    // GitHub-backed storage
+    // GitHub-backed storage (unchanged)
     // ------------------------
 
     function setLocalToken(t) {
@@ -464,7 +307,6 @@
       return localStorage.getItem(TOKEN_KEY) || '';
     }
 
-    // safe base64 decode of GitHub file content
     function decodeBase64Content(b64) {
       try {
         const cleaned = b64.replace(/\n/g, '');
@@ -526,10 +368,9 @@
       try {
         const f = await githubGetFile(GITHUB_OWNER, GITHUB_REPO, GITHUB_PATH, token);
         if (!f) return alert('No ' + GITHUB_PATH + ' found in repo. You can Save to GitHub to create it.');
-        // replace local predictions with content from file
         if (!Array.isArray(f.content)) throw new Error('Invalid content in ' + GITHUB_PATH);
         predictions = f.content;
-        save(); // writes to localStorage and re-renders
+        save();
         alert('Loaded ' + predictions.length + ' predictions from GitHub (commit SHA: ' + f.sha + ').');
       } catch (err) {
         console.error(err);
@@ -551,6 +392,10 @@
         alert('Save failed: ' + err.message + '\nMake sure the token has repo/public_repo scope and the repo owner/repo names are correct.');
       }
     };
+
+    // initialize
+    ghTokenInput.value = localStorage.getItem(TOKEN_KEY) || '';
+    load();
 
   </script>
 </body>
