@@ -15,7 +15,7 @@
     h1{margin:0 0 8px 0;font-size:20px;}
     p.lead{margin:0 0 18px 0;color:var(--muted);} 
     form.row{display:flex; gap:8px; align-items:flex-start; margin-bottom:16px;} 
-    input[type="text"], input[type="date"], input[type="datetime-local"]{background:var(--card); border:1px solid rgba(255,255,255,0.03); color:inherit; padding:10px 12px; border-radius:8px; outline:none; flex:1;} 
+    input[type="text"], input[type="date"], input[type="datetime-local"], input[type="password"]{background:var(--card); border:1px solid rgba(255,255,255,0.03); color:inherit; padding:10px 12px; border-radius:8px; outline:none; flex:1;} 
     button{background:var(--accent); color:#072033; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:600;} 
     button.ghost{background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted);} 
     .grid{display:grid; grid-template-columns:1fr 300px; gap:20px;} 
@@ -36,6 +36,9 @@
     .stat-row{display:flex; gap:8px; justify-content:space-between; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.01);} 
     footer{margin-top:16px;font-size:13px;color:var(--muted);} 
     .empty{color:var(--muted); text-align:center; padding:28px 0;} 
+    .gh-box{display:flex;flex-direction:column; gap:8px; margin-top:8px}
+    .gh-controls{display:flex; gap:8px; align-items:center}
+    .note{font-size:12px;color:var(--muted)}
   </style>
 </head>
 <body>
@@ -82,11 +85,24 @@
             <button id="clearAll" class="ghost">Clear All</button>
           </div>
         </div>
+
+        <div class="gh-box">
+          <h4 style="margin:6px 0 0 0;">GitHub-backed storage</h4>
+          <div class="note">Store predictions in this repository (predictions.json). You must paste a Personal Access Token (PAT) with repo or public_repo scope. The token is saved only in your browser localStorage.</div>
+          <input id="ghTokenInput" type="password" placeholder="Paste GitHub PAT (saved locally)" />
+          <div class="gh-controls">
+            <button id="ghConnectBtn" class="ghost">Connect GitHub</button>
+            <button id="ghDisconnectBtn" class="ghost">Disconnect</button>
+            <button id="ghLoadBtn" class="ghost">Load from GitHub</button>
+            <button id="ghSaveBtn" class="ghost">Save to GitHub</button>
+          </div>
+        </div>
+
       </aside>
     </div>
 
     <footer>
-      This is a lightweight web version of ImRight. Data is stored in your browser localStorage. You can export/import JSON to move data between devices.
+      This is a lightweight web version of ImRight. Data is stored in your browser localStorage by default. Use GitHub-backed storage to persist predictions to the repository where this site is hosted.
     </footer>
   </div>
 
@@ -104,11 +120,24 @@
     const notifyPermBtn = document.getElementById('notifyPermBtn');
     const clearAllBtn = document.getElementById('clearAll');
 
+    // GitHub UI
+    const ghTokenInput = document.getElementById('ghTokenInput');
+    const ghConnectBtn = document.getElementById('ghConnectBtn');
+    const ghDisconnectBtn = document.getElementById('ghDisconnectBtn');
+    const ghLoadBtn = document.getElementById('ghLoadBtn');
+    const ghSaveBtn = document.getElementById('ghSaveBtn');
+
     const statTotal = document.getElementById('statTotal');
     const statCorrect = document.getElementById('statCorrect');
     const statIncorrect = document.getElementById('statIncorrect');
     const statPending = document.getElementById('statPending');
     const statRate = document.getElementById('statRate');
+
+    // GitHub repo target (adjust if you fork/own the repo)
+    const GITHUB_OWNER = 'thesg101-creator';
+    const GITHUB_REPO = 'ImRight';
+    const GITHUB_PATH = 'predictions.json';
+    const TOKEN_KEY = 'imright.github.token';
 
     let predictions = [];
     const timers = new Map(); // id -> timeoutId
@@ -290,7 +319,7 @@
       const now = Date.now();
       const delay = judgmentTime - now;
       if (delay <= 0) return;
-      // Limit: cap to 7 days to avoid browser timer clamping on long timers
+      // Limit: cap to 14 days to avoid browser timer clamping on long timers
       const MAX_DELAY = 1000 * 60 * 60 * 24 * 14; // 14 days
       const runDelay = Math.min(delay, MAX_DELAY);
       const id = setTimeout(() => {
@@ -310,7 +339,7 @@
 
     function rescheduleAll() {
       // Cancel all existing and schedule again.
-      for(const k of timers.keys()) {
+      for(const k of Array.from(timers.keys())) {
         cancelScheduled(k);
       }
       for(const p of predictions) {
@@ -383,6 +412,8 @@
     notifyPermBtn.onclick = () => requestNotificationPermission();
 
     // On load
+    // populate GH token input from localStorage
+    ghTokenInput.value = localStorage.getItem(TOKEN_KEY) || '';
     load();
 
     // Re-schedule when visibility changes (in case user reopened the page)
@@ -419,6 +450,107 @@
         }
       }
     }, 60_000);
+
+    // ------------------------
+    // GitHub-backed storage
+    // ------------------------
+
+    function setLocalToken(t) {
+      if (t) localStorage.setItem(TOKEN_KEY, t);
+      else localStorage.removeItem(TOKEN_KEY);
+      ghTokenInput.value = t || '';
+    }
+    function getLocalToken() {
+      return localStorage.getItem(TOKEN_KEY) || '';
+    }
+
+    // safe base64 decode of GitHub file content
+    function decodeBase64Content(b64) {
+      try {
+        const cleaned = b64.replace(/\n/g, '');
+        const str = atob(cleaned);
+        try { return JSON.parse(decodeURIComponent(escape(str))); }
+        catch(e) { return JSON.parse(str); }
+      } catch (e) { throw new Error('Failed to decode base64 content: ' + e.message); }
+    }
+
+    async function githubGetFile(owner, repo, path, token) {
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+      const headers = { 'Accept': 'application/vnd.github.v3+json' };
+      if (token) headers['Authorization'] = 'token ' + token;
+      const res = await fetch(url, { headers });
+      if (res.status === 404) return null;
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error('GitHub GET failed: ' + res.status + ' ' + text);
+      }
+      const js = await res.json();
+      const content = decodeBase64Content(js.content || '');
+      return { sha: js.sha, content };
+    }
+
+    async function githubPutFile(owner, repo, path, contentObj, message, token, sha) {
+      if (!token) throw new Error('No GitHub token provided');
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+      const jsonStr = JSON.stringify(contentObj, null, 2);
+      const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+      const body = { message: message || 'Update predictions via ImRight', content: base64 };
+      if (sha) body.sha = sha;
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error('GitHub PUT failed: ' + res.status + ' ' + text);
+      }
+      return await res.json();
+    }
+
+    ghConnectBtn.onclick = () => {
+      const t = ghTokenInput.value.trim();
+      if (!t) return alert('Paste your GitHub PAT (token) into the field.');
+      setLocalToken(t);
+      alert('Token saved in your browser (localStorage). You can revoke it any time in your GitHub settings.');
+    };
+
+    ghDisconnectBtn.onclick = () => {
+      if (!confirm('Remove saved GitHub token from this browser?')) return;
+      setLocalToken(null);
+      alert('Disconnected. Token removed from localStorage.');
+    };
+
+    ghLoadBtn.onclick = async () => {
+      const token = getLocalToken();
+      try {
+        const f = await githubGetFile(GITHUB_OWNER, GITHUB_REPO, GITHUB_PATH, token);
+        if (!f) return alert('No ' + GITHUB_PATH + ' found in repo. You can Save to GitHub to create it.');
+        // replace local predictions with content from file
+        if (!Array.isArray(f.content)) throw new Error('Invalid content in ' + GITHUB_PATH);
+        predictions = f.content;
+        save(); // writes to localStorage and re-renders
+        alert('Loaded ' + predictions.length + ' predictions from GitHub (commit SHA: ' + f.sha + ').');
+      } catch (err) {
+        console.error(err);
+        alert('Load failed: ' + err.message + '\nMake sure token has repo/public_repo scope if repo is private.');
+      }
+    };
+
+    ghSaveBtn.onclick = async () => {
+      const token = getLocalToken();
+      if (!token) return alert('Paste your GitHub PAT and click Connect first.');
+      try {
+        const existing = await githubGetFile(GITHUB_OWNER, GITHUB_REPO, GITHUB_PATH, token).catch(e => null);
+        const sha = existing ? existing.sha : undefined;
+        const msg = existing ? 'Update predictions via ImRight web' : 'Create predictions.json via ImRight web';
+        await githubPutFile(GITHUB_OWNER, GITHUB_REPO, GITHUB_PATH, predictions, msg, token, sha);
+        alert('Saved ' + predictions.length + ' predictions to GitHub at ' + GITHUB_PATH);
+      } catch (err) {
+        console.error(err);
+        alert('Save failed: ' + err.message + '\nMake sure the token has repo/public_repo scope and the repo owner/repo names are correct.');
+      }
+    };
 
   </script>
 </body>
