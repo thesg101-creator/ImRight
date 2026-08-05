@@ -408,17 +408,52 @@
             '⏳': '⏳'
         };
 
-        // Initialize from localStorage
-        function loadPredictions() {
+        // Load predictions from storer.json with localStorage fallback
+        async function loadPredictions() {
+            try {
+                const response = await fetch('storer.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && Array.isArray(data)) {
+                        predictions = data;
+                        // Update localStorage cache
+                        localStorage.setItem('predictions', JSON.stringify(predictions));
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.warn('Failed to load from storer.json, falling back to localStorage:', error);
+            }
+
+            // Fallback to localStorage if storer.json is unavailable
             const saved = localStorage.getItem('predictions');
             if (saved) {
-                predictions = JSON.parse(saved);
+                try {
+                    predictions = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Failed to parse localStorage predictions:', e);
+                    predictions = [];
+                }
             }
         }
 
-        // Save to localStorage
-        function savePredictions() {
+        // Save predictions to both storer.json and localStorage
+        async function savePredictions() {
+            // Save to localStorage (for offline access)
             localStorage.setItem('predictions', JSON.stringify(predictions));
+
+            // Save to storer.json (server-side storage)
+            try {
+                await fetch('storer.json', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(predictions)
+                });
+            } catch (error) {
+                console.warn('Failed to save to storer.json, changes saved to localStorage only:', error);
+            }
         }
 
         // Format date
@@ -588,8 +623,9 @@
         });
 
         // Initialize
-        loadPredictions();
-        renderPredictions();
+        loadPredictions().then(() => {
+            renderPredictions();
+        });
     </script>
 </body>
 </html>
